@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "io-net", "io-net\io-net.fsproj", "{98CCCEF9-D26F-431C-8814-DD26E52B8A73}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ConsoleApplication1", "ConsoleApplication1\ConsoleApplication1.fsproj", "{FFEEE96B-2B7D-4BD1-A403-E872DBFAC015}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{98CCCEF9-D26F-431C-8814-DD26E52B8A73}.Debug|x86.ActiveCfg = Debug|x86
+		{98CCCEF9-D26F-431C-8814-DD26E52B8A73}.Debug|x86.Build.0 = Debug|x86
+		{98CCCEF9-D26F-431C-8814-DD26E52B8A73}.Release|x86.ActiveCfg = Release|x86
+		{98CCCEF9-D26F-431C-8814-DD26E52B8A73}.Release|x86.Build.0 = Release|x86
+		{FFEEE96B-2B7D-4BD1-A403-E872DBFAC015}.Debug|x86.ActiveCfg = Debug|x86
+		{FFEEE96B-2B7D-4BD1-A403-E872DBFAC015}.Debug|x86.Build.0 = Debug|x86
+		{FFEEE96B-2B7D-4BD1-A403-E872DBFAC015}.Release|x86.ActiveCfg = Release|x86
+		{FFEEE96B-2B7D-4BD1-A403-E872DBFAC015}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

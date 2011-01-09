@@ -1,0 +1,88 @@
+﻿{
+module IoLex
+
+open System
+open System.Globalization
+open System.Text
+open Microsoft.FSharp.Text.Lexing
+
+open IoParse
+
+type internal Util =
+  static member lexeme (lexbuf: LexBuffer<byte>) = lexbuf.Lexeme |> Text.Encoding.UTF8.GetString
+  static member lexeme (lexbuf: LexBuffer<char>) = new System.String(lexbuf.Lexeme)
+
+let unescape = function
+              | "\"" -> "\""
+              | "\\" -> "\\"
+              | "n"  -> "\n"
+              | "r"  -> "\r"
+              | "f"  -> "\f"
+              | "t"  -> "\t"
+              | text -> text
+
+let parseHex (tok: string) =
+  let n = tok.Substring 2
+  float <| Int32.Parse(n, NumberStyles.HexNumber)
+}
+
+let digit = ['0'-'9']
+let letter = ['a'-'z' 'A'-'Z']
+let whitespace = (' ' | '\t' | '\r' | '\n')
+let newline = ('\n' | '\r' '\n')
+let terminator = (';' | '\n' | '\r' '\n' )
+let separator = [' ' '\t' ]
+let hex = ['0'-'9' 'a'-'f' 'A'-'F']
+let hexSpec = '0' ('x' | 'X')
+let triquote = '"' '"' '"'
+let monoquote = '"'
+let line_comment = ('#' | '/' '/')
+let multi_open = '/' '*'
+let multi_close = '*' '/'
+let escape = ('n' | 'r' | 'b' | 'f' | 't' | 'v' | '\\' | '"')
+let idChar = (letter | digit | '_' | '.')
+let opChar = ( ':' | '.' | '\'' | '~' | '!' | '@' | '$' | '%' | '^' | '&' | '*' | '-' | '+' | '/' | '=' | '{' | '}' | '[' | ']' | '|' | '\\' | '<' | '>' | '?' )
+let openChar = ( '(' | '[' )
+let closeChar = ( ')' | ')' )
+
+rule token = parse
+| newline                                                 { NEWLINE }
+| line_comment                                            { line_comment lexbuf }
+| multi_open                                              { multi_comment 0 lexbuf }
+| (separator* ';' | '\n' | '\r' separator*)+              { TERMINATOR }
+| ';'                                                     { SEMI }
+| '\"'                                                    { monostring (new StringBuilder()) lexbuf }
+| '\"' '\"' '\"'                                          { tristring (new StringBuilder()) lexbuf }
+| ','                                                     { COMMA }
+| openChar                                                { OPEN( Util.lexeme lexbuf ) }
+| closeChar                                               { CLOSE( Util.lexeme lexbuf ) }
+| hexSpec hex+                                            { NUMBER( lexbuf |> Util.lexeme |> parseHex ) }
+| ['-']?digit+('.' digit+)?(['e' 'E']['-']?digit+)?       { NUMBER( Double.Parse(Util.lexeme lexbuf) ) }
+| idChar+                                                 { ID( Util.lexeme lexbuf ) }
+| opChar+                                                 { OP( Util.lexeme lexbuf ) }
+| eof                 { EOF }
+
+and monostring sb = parse
+| '\"'                { STRING(sb.ToString()) }
+| eof | newline       { failwith "Unclosed string literal" }
+| '\\' escape         { monostring (lexbuf |> Util.lexeme |> unescape |> sb.Append) lexbuf }
+| _                   { monostring (lexbuf |> Util.lexeme |> sb.Append) lexbuf }
+
+and tristring sb = parse
+| triquote            { STRING(sb.ToString()) }
+| eof                 { failwith "Unclosed string literal" }
+| _                   { tristring (lexbuf |> Util.lexeme |> sb.Append) lexbuf }
+
+and line_comment = parse
+| newline             { COMMENT }
+| _                   { line_comment lexbuf }
+
+and multi_comment nested = parse
+| multi_open          { multi_comment (nested + 1) lexbuf }
+| eof                 { failwith "Unclosed multiline comment" }
+| multi_close         { if nested = 0 then COMMENT else multi_comment (nested - 1) lexbuf }
+| _                   { multi_comment nested lexbuf }
+
+and whitespace = parse
+| whitespace          { whitespace lexbuf }
+| _                   { WHITESPACE }

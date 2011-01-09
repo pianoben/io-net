@@ -1,0 +1,43 @@
+﻿%{
+open Ast
+%}
+
+%start start
+%token <string> ID
+%token <string> OP
+%token <string> STRING
+%token <string> OPEN
+%token <string> CLOSE
+%token <System.Double> NUMBER
+%token SEMI EOF COMMA NEWLINE COMMENT WHITESPACE TERMINATOR
+%type < Ast.Tree > start
+
+%%
+
+start: Exprs EOF { Expressions( List.rev $1 ) }
+
+Exprs: Expr               { [$1] }
+  | Exprs COMMA Expr      { $3 :: $1 }
+
+Expr: Messages Terminator { Expression( List.rev $1 ) }
+
+Messages: Message { [$1] }
+  | Messages WHITESPACE Message { $3 :: $1 }
+
+Message: Symbol      { Message($1, []) }
+  | Symbol OPEN Arguments CLOSE { if $2 <> $4 then failwith "Unmatched parens"
+                                  Message($1, List.rev $3) } 
+
+Arguments: Expr { [$1] }
+  | Arguments COMMA Expr { $3 :: $1 }
+
+Symbol: ID                    { Identifier($1) }
+  | NUMBER                    { Number($1) }
+  | STRING                    { Quote($1) }
+  | OP                        { Operator($1) }
+
+Separator:
+  | NEWLINE                   { }
+  | COMMENT                   { }
+  | SEMI                      { }
+
